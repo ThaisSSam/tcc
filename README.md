@@ -1,4 +1,4 @@
-# Projeto final — Gestão de Tarefas
+# Projeto tcc
 
 ## Stack instalada
 
@@ -21,7 +21,3 @@ yarn build
 ## Componentes (shadcn/ui)
 
 Os componentes do shadcn ficam em `src/components` (PascalCase, ex.: `Button.tsx`). O utilitário `cn` está em `src/lib/utils.ts`.
-
-## Próximos passos
-
-Implementar as telas do curso conforme os mockups (login, dashboard, tarefas, etc.).

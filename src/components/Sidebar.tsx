@@ -1,15 +1,26 @@
-import * as React from 'react';
+import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { LayoutDashboard, CheckSquare, Calendar, FolderKanban, Users, Settings, Power, ClipboardList, User, Car, Route, Map, Calculator } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Car, 
+  Route, 
+  Map, 
+  Users, 
+  Settings, 
+  Power, 
+  User, 
+  Calculator,
+  Menu,
+  ChevronLeft
+} from 'lucide-react';
 import { cn } from '../lib/utils';
-// import { useNavigate } from 'react-router-dom';
 
 const sidebarItemVariants = cva(
-  'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer group',
+  'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer group whitespace-nowrap overflow-hidden',
   {
     variants: {
       variant: {
-        default: 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30',
+        default: 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40',
         active: 'text-blue-400 bg-blue-500/10 font-semibold border-r-2 border-blue-500 rounded-r-none lg:rounded-xl lg:border-none',
       },
     },
@@ -24,57 +35,98 @@ export interface SidebarItemProps
     VariantProps<typeof sidebarItemVariants> {  
   icon: React.ComponentType<import("lucide-react").LucideProps>; 
   children: React.ReactNode;
+  isOpen?: boolean;
 }
 
 const SidebarItem = React.forwardRef<HTMLButtonElement, SidebarItemProps>(
-  ({ className, variant, icon: Icon, children, ...props }, ref) => {
+  ({ className, variant, icon: Icon, children, isOpen = true, ...props }, ref) => {
     return (
       <button
         ref={ref}
         type="button"
-        className={cn(sidebarItemVariants({ variant, className }))}
+        className={cn(sidebarItemVariants({ variant, className }), !isOpen && "justify-center px-0")}
+        title={!isOpen && typeof children === "string" ? children : undefined}
         {...props}
       >      
-        {Icon && <Icon size={18} />}
-        <span>{children}</span>
+        {Icon && <Icon size={18} className="flex-shrink-0" />}
+        {isOpen && <span className="transition-opacity duration-200">{children}</span>}
       </button>
     );
   },
 );
 SidebarItem.displayName = 'SidebarItem';
 
-
-export interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
+export interface SidebarProps {
   currentPath?: string;
+  isOpen?: boolean;
+  onToggle?: () => void;
   onNavigate?: (path: string) => void;
-  onLogout?: () => void;
+  onLogout?: () => Promise<void> | void;
 }
 
 export default function SidebarComponent({ 
   currentPath = '/home', 
+  isOpen = true,
+  onToggle,
   onNavigate, 
   onLogout 
 }: SidebarProps) {
   
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-700/70 min-h-screen flex flex-col justify-between p-4 font-sans text-white shadow-lg shadow-slate-700/40">
+    <aside 
+      className={cn(
+        "bg-slate-900 border-r border-slate-700/70 min-h-screen flex flex-col justify-between p-3 font-sans text-white shadow-lg select-none transition-all duration-300 ease-in-out flex-shrink-0 z-30",
+        isOpen ? "w-64" : "w-16"
+      )}
+    >
       <div>
-        <div className="flex items-center gap-3 px-2 py-4 mb-1">
-          <div className="w-9 h-9 bg-[#4531f7] rounded-xl flex items-center justify-center">
-            <Calculator size={18} className="text-white" />
-          </div>
-          <div>
-            <h2 className="font-bold text-sm leading-tight text-slate-100">Calculadora de Trajeto</h2>
-            <p className="text-[10px] text-slate-500">Gestão de Atividades</p>
-          </div>
-        </div>
-        <hr className="border-slate-600/60 mb-3"/>
+        {/* CABEÇALHO COM EXPANDIR / RECOLHER */}
+        <div className="flex items-center justify-between px-1 py-3 mb-2">
+          {isOpen ? (
+            <>
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="w-8 h-8 bg-[#4531f7] rounded-lg flex items-center justify-center flex-shrink-0 shadow-md shadow-indigo-500/20">
+                  <Calculator size={16} className="text-white" />
+                </div>
+                <div className="overflow-hidden leading-tight">
+                  <h2 className="font-bold text-xs text-slate-100 truncate">Calculadora Trajeto</h2>
+                  <p className="text-[9px] text-slate-500 truncate">Planejamento Viagens</p>
+                </div>
+              </div>
 
-        {/* PRINCIPAL */}
+              <button
+                onClick={onToggle}
+                type="button"
+                title="Recolher menu"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <ChevronLeft size={16} />
+              </button>
+            </>
+          ) : (
+            <div className="w-full flex justify-center">
+              <button
+                type="button"
+                onClick={onToggle}
+                title="Expandir menu"
+                className="w-9 h-9 bg-[#4531f7] hover:bg-[#3925e0] rounded-lg flex items-center justify-center shadow-md shadow-indigo-500/20 transition-all cursor-pointer"
+              >
+                <Menu size={18} className="text-white" />
+              </button>
+            </div>
+          )}
+        </div>
+        
+        <hr className="border-slate-700/60 mb-3"/>
+
+        {/* NAVEGAÇÃO PRINCIPAL */}
         <div className="space-y-1 mb-6">
-          <p className="text-[10px] font-bold tracking-wider text-slate-500 px-3 mb-2 uppercase">Principal</p>
+          {isOpen && (
+            <p className="text-[10px] font-bold tracking-wider text-slate-500 px-3 mb-2 uppercase">Principal</p>
+          )}
           <SidebarItem 
             icon={LayoutDashboard} 
+            isOpen={isOpen}
             variant={currentPath === '/home' ? 'active' : 'default'}
             onClick={() => onNavigate?.('/home')}
           >
@@ -82,41 +134,41 @@ export default function SidebarComponent({
           </SidebarItem>
           <SidebarItem 
             icon={Car} 
-            variant={currentPath === '/tasks' ? 'active' : 'default'}
-            onClick={() => onNavigate?.('/tasks')}
+            isOpen={isOpen}
+            variant={currentPath.startsWith('/veiculos') ? 'active' : 'default'}
+            onClick={() => onNavigate?.('/veiculos')}
           >
             Veículos
           </SidebarItem>
           <SidebarItem 
             icon={Route} 
-            variant={currentPath === '/my-week' ? 'active' : 'default'}
-            onClick={() => onNavigate?.('/my-week')}
+            isOpen={isOpen}
+            variant={currentPath.startsWith('/rotas') ? 'active' : 'default'}
+            onClick={() => onNavigate?.('/rotas')}
           >
             Rotas
           </SidebarItem>
           <SidebarItem 
             icon={Map} 
-            variant={currentPath === '/projects' ? 'active' : 'default'}
-            onClick={() => onNavigate?.('/projects')}
+            isOpen={isOpen}
+            variant={currentPath === '/mapa' ? 'active' : 'default'}
+            onClick={() => onNavigate?.('/mapa')}
           >
             Mapa
           </SidebarItem>
         </div>
 
-        {/* ADM */}
+        {/* NAVEGAÇÃO ADM */}
         <div className="space-y-1">
-          <p className="text-[10px] font-bold tracking-wider text-slate-500 px-3 mb-2 uppercase">Administração</p>
-          <SidebarItem 
-            icon={Users} 
-            variant={currentPath === '/users' ? 'active' : 'default'}
-            onClick={() => onNavigate?.('/users')}
-          >
-            Usuário
-          </SidebarItem>
+          {isOpen && (
+            <p className="text-[10px] font-bold tracking-wider text-slate-500 px-3 mb-2 uppercase">Administração</p>
+          )}
+
           <SidebarItem 
             icon={Settings} 
-            variant={currentPath === '/settings' ? 'active' : 'default'}
-            onClick={() => onNavigate?.('/settings')}
+            isOpen={isOpen}
+            variant={currentPath === '/configuracoes' ? 'active' : 'default'}
+            onClick={() => onNavigate?.('/configuracoes')}
           >
             Configurações
           </SidebarItem>
@@ -124,27 +176,27 @@ export default function SidebarComponent({
       </div>
 
       {/* RODAPÉ */}
-      <div className="border-t border-slate-600/60 pt-4 flex items-center justify-between px-2 group">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center font-bold text-xs border border-blue-500/20">
-          <User/>            
+      <div className={cn("border-t border-slate-700/60 pt-3 flex items-center justify-between px-1", !isOpen && "flex-col gap-2")}>
+        <div className="flex items-center gap-2 overflow-hidden">
+          <div className="w-8 h-8 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center font-bold text-xs border border-blue-500/20 flex-shrink-0">
+            <User size={15} />            
           </div>
-          <div>
-            <h4 className="text-xs font-bold text-slate-200">Thais</h4>
-            <p className="text-[10px] text-slate-500">Administrador</p>
-          </div>
+          {isOpen && (
+            <div className="overflow-hidden leading-tight">
+              <h4 className="text-xs font-bold text-slate-200 truncate">Thais</h4>
+              <p className="text-[9px] text-slate-500 truncate">Administrador</p>
+            </div>
+          )}
         </div>
         <button 
           onClick={onLogout}
           type="button"
-          title='Sair'
-          className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800/30"
+          title="Sair"
+          className="text-slate-500 hover:text-rose-400 transition-colors cursor-pointer p-1.5 rounded-lg hover:bg-slate-800/50 flex-shrink-0"
         >
-          <Power size={16} className='text-[#9e2b2b]' />
+          <Power size={15} className="text-[#9e2b2b]" />
         </button>
       </div>
     </aside>
   );
 }
-
-export { SidebarComponent as Sidebar, SidebarItem };

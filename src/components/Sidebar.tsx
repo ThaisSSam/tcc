@@ -11,7 +11,9 @@ import {
   User, 
   Calculator,
   Menu,
-  ChevronLeft
+  ChevronLeft,
+  Coins,
+  Receipt
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -155,6 +157,14 @@ export default function SidebarComponent({
             onClick={() => onNavigate?.('/mapa')}
           >
             Mapa
+          </SidebarItem>
+          <SidebarItem 
+            icon={Receipt} 
+            isOpen={isOpen}
+            variant={currentPath === '/gastos' ? 'active' : 'default'}
+            onClick={() => onNavigate?.('/gastos')}
+          >
+            Gastos
           </SidebarItem>
         </div>
 

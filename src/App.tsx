@@ -4,6 +4,7 @@ import AppLoadingFallback from "./components/layout/AppLoadingFallback";
 import AppLayout from "./components/layout/AppLayout";
 import ConsultarRotasScreen from "./screens/rotas/consultarRotas";
 import MapaRotasScreen from "./screens/mapa";
+import GastosScreen from "./screens/gastos";
 
 const LoginScreen = lazy(() => import("./screens/login/index"));
 const ForgotPasswordScreen = lazy(() => import("./screens/login/esqueciSenha"));
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/rotas" element={<ConsultarRotasScreen />} />
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/mapa" element={<MapaRotasScreen />} />
+          <Route path="/gastos" element={<GastosScreen />} />
         </Route>
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

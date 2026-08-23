@@ -7,7 +7,7 @@ import {
   type PaginationState,
   type SortingState,
 } from '@tanstack/react-table';
-import { Route as RouteIcon, Plus, Search, Star, X, Trash2 } from 'lucide-react';
+import { Route as RouteIcon, Plus, Search, Star, X, Trash2, Map } from 'lucide-react';
 import { BaseDataTable } from '../../../contexts/BaseDataTable';
 import { createRotaColumns, type SimulacaoRota } from './table/tableConfig';
 
@@ -153,7 +153,7 @@ export default function ConsultarRotasScreen() {
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 overflow-hidden">
       {/* HEADER */}
-      <header className="flex justify-between items-center border-b border-slate-800 bg-[#0f172a] px-8 py-5 sticky top-0 z-10 flex-shrink-0">
+      <header className="flex justify-between items-center border-b border-slate-800 bg-[#0f172a] px-6 py-5 sticky top-0 z-10 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-blue-600/10 text-blue-500 rounded-xl flex items-center justify-center border border-blue-500/20">
             <RouteIcon size={20} />
@@ -165,11 +165,11 @@ export default function ConsultarRotasScreen() {
         </div>
 
         <button
-          onClick={() => navigate('/rotas/nova')}
+          onClick={() => navigate('/rotas/mapa')}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-xs shadow-lg shadow-blue-500/10 transition-colors cursor-pointer"
         >
-          <Plus size={16} />
-          Nova Simulação
+          <Map size={16} />
+          Mapa
         </button>
       </header>
 

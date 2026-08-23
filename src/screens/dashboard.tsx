@@ -1,9 +1,64 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Settings, Car, Route, UserIcon } from "lucide-react";
+import { GoogleMap, useJsApiLoader, Marker, type Libraries } from "@react-google-maps/api";
+import { Bell, Settings, Car, Route, UserIcon, ExternalLink, Navigation } from "lucide-react";
+
+const GOOGLE_MAPS_LIBRARIES: Libraries = ["places"];
+
+const mapContainerStyle = {
+  width: "100%",
+  height: "100%",
+  borderRadius: "0.5rem",
+};
+
+// Localização padrão (Birigui - SP) caso o usuário não permita GPS
+const localizacaoPadrao = {
+  lat: -21.2889,
+  lng: -50.3408,
+};
+
+const darkMapStyle = [
+  { elementType: "geometry", stylers: [{ color: "#131b2e" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#131b2e" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#7486a6" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#222f4c" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#1b253d" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2b3b5e" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#090d16" }] },
+];
 
 export default function DashboardScreen() {
   const navigate = useNavigate();
+  const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || "";
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: apiKey,
+    libraries: GOOGLE_MAPS_LIBRARIES,
+    language: "pt-BR",
+    region: "BR",
+  });
+
+  const [posicaoAtual, setPosicaoAtual] = useState<{ lat: number; lng: number }>(localizacaoPadrao);
+  const [gpsAtivo, setGpsAtivo] = useState(false);
+
+  // Obtém a localização GPS em tempo real do navegador do usuário
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setPosicaoAtual({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setGpsAtivo(true);
+        },
+        () => {
+          // Permissão negada ou erro: mantém a localização padrão
+          setGpsAtivo(false);
+        }
+      );
+    }
+  }, []);
 
   const dadosMeses = useMemo(() => {
     const nomesMeses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -23,9 +78,9 @@ export default function DashboardScreen() {
   }, []);
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 overflow-y-auto">
+    <div className="flex flex-col flex-1 h-full min-h-0 overflow-y-auto font-sans">
       <header className="flex justify-between items-center border-b border-slate-800 bg-[#0f172a] px-6 py-5 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-slate-100 font-['Inter']">
+        <h1 className="text-xl font-bold text-slate-100">
           Calculadora de trajeto
         </h1>
         <div className="flex items-center gap-4 text-xs text-slate-400">
@@ -75,10 +130,56 @@ export default function DashboardScreen() {
           </div>
         </div>
 
-        {/* MAPA */}
-        <div className="border border-slate-800 rounded-xl p-5 bg-[#131b2e]">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-5">Mapa</h3>
-          <img src="/imagens/mapa.png" alt="Mapa de rotas" className="w-full h-auto rounded-lg object-cover max-h-64" />
+        {/* MAPA INTERATIVO NO DASHBOARD (CLICÁVEL) */}
+        <div 
+          onClick={() => navigate("/mapa")}
+          className="border border-slate-800 rounded-xl p-5 bg-[#131b2e] hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
+        >
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                Mapa em Tempo Real
+              </h3>
+              {gpsAtivo && (
+                <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-medium">
+                  <Navigation size={10} className="animate-pulse" /> Localização Atual
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-blue-400 flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-all font-medium">
+              Abrir Comparador de Rotas <ExternalLink size={13} />
+            </span>
+          </div>
+
+          <div className="w-full h-64 rounded-lg overflow-hidden relative border border-slate-800/80 pointer-events-none">
+            {isLoaded ? (
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={posicaoAtual}
+                zoom={11}
+                options={{
+                  styles: darkMapStyle,
+                  disableDefaultUI: true, // Mapa limpo para visualização rápida no dashboard
+                  zoomControl: false,
+                  gestureHandling: "none",
+                }}
+              >
+                {/* Marcador da localização atual */}
+                <Marker
+                  position={posicaoAtual}
+                  icon={{
+                    url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                  }}
+                />
+              </GoogleMap>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-[#090d16] text-slate-500 text-xs">
+                Carregando mapa...
+              </div>
+            )}
+            {/* Overlay sutil para reforçar clique */}
+            <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/5 transition-all" />
+          </div>
         </div>
 
         {/* GRÁFICO */}

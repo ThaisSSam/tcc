@@ -383,7 +383,7 @@ export default function GastosScreen() {
       {/* CONTEÚDO PRINCIPAL */}
       <main className="p-6 space-y-6 flex-1">
         {/* CARDS KPIS GLOBAIS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow-sm">
             <div className="flex justify-between items-center text-slate-400">
               <span className="text-[10px] font-bold uppercase tracking-wider">
@@ -433,27 +433,6 @@ export default function GastosScreen() {
               </h2>
               <p className="text-[11px] text-slate-500 mt-0.5">
                 Rotas sem pedágio e opções elétricas
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow-sm">
-            <div className="flex justify-between items-center text-slate-400">
-              <span className="text-[10px] font-bold uppercase tracking-wider">
-                Status das Revisões
-              </span>
-              <Wrench size={16} className="text-amber-400" />
-            </div>
-            <div className="mt-2">
-              <h2 className="text-2xl font-bold font-mono text-amber-400">
-                {
-                  ALERTAS_MANUTENCAO_MOCK.filter((a) => a.status === "urgente")
-                    .length
-                }{" "}
-                Alertas
-              </h2>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Veículos atingindo quilometragem limite
               </p>
             </div>
           </div>

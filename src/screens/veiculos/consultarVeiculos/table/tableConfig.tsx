@@ -1,6 +1,6 @@
-import React from 'react';
-import { type ColumnDef } from '@tanstack/react-table';
-import { Car, Fuel, Zap, Eye, Edit, Trash2 } from 'lucide-react';
+import React from "react";
+import { type ColumnDef } from "@tanstack/react-table";
+import { Car, Fuel, Zap, Eye, Edit, Trash2, Leaf } from "lucide-react";
 
 export interface Veiculo {
   id: string;
@@ -8,8 +8,9 @@ export interface Veiculo {
   marca: string;
   modelo: string;
   anoFabricacao: number;
-  tipoPropulsao: 'combustao' | 'eletrico';
-  consumo: number; 
+  tipoPropulsao: "combustao" | "eletrico" | "hibrido";
+  consumo: number;
+  consumoEletrico?: number;
   capacidadeBateria?: number;
   autonomiaKm?: number;
 }
@@ -17,10 +18,10 @@ export interface Veiculo {
 export const createVeiculoColumns = (
   onVisualizar: (data: Veiculo) => void,
   onEditar: (id: string) => void,
-  onExcluir: (data: Veiculo) => void
+  onExcluir: (data: Veiculo) => void,
 ): ColumnDef<any, any>[] => [
   {
-    id: 'acoes',
+    id: "acoes",
     header: () => <span className="text-center block">Ações</span>,
     size: 150,
     enableResizing: false,
@@ -51,21 +52,24 @@ export const createVeiculoColumns = (
     ),
   },
   {
-    accessorKey: 'apelido',
-    header: 'Apelido',
+    accessorKey: "apelido",
+    header: "Apelido",
     size: 200,
     minSize: 150,
     maxSize: 300,
     cell: ({ row }: any) => (
-      <div className="font-semibold text-slate-100 flex items-center gap-2 truncate" title={row.original.apelido}>
+      <div
+        className="font-semibold text-slate-100 flex items-center gap-2 truncate"
+        title={row.original.apelido}
+      >
         <Car size={15} className="text-slate-500 flex-shrink-0" />
         <span className="truncate">{row.original.apelido}</span>
       </div>
     ),
   },
   {
-    accessorKey: 'marcaModelo',
-    header: 'Marca & Modelo',
+    accessorKey: "marcaModelo",
+    header: "Marca & Modelo",
     size: 220,
     minSize: 180,
     maxSize: 320,
@@ -79,8 +83,8 @@ export const createVeiculoColumns = (
     },
   },
   {
-    accessorKey: 'anoFabricacao',
-    header: 'Ano',
+    accessorKey: "anoFabricacao",
+    header: "Ano",
     size: 100,
     minSize: 80,
     maxSize: 120,
@@ -91,14 +95,18 @@ export const createVeiculoColumns = (
     ),
   },
   {
-    accessorKey: 'tipoPropulsao',
-    header: 'Propulsão',
+    accessorKey: "tipoPropulsao",
+    header: "Propulsão",
     size: 150,
     minSize: 130,
     maxSize: 180,
     cell: ({ row }: any) => (
       <div className="whitespace-nowrap">
-        {row.original.tipoPropulsao === 'combustao' ? (
+        {row.original.tipoPropulsao === "hibrido" ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <Leaf size={12} className="flex-shrink-0" /> Híbrido
+          </span>
+        ) : row.original.tipoPropulsao === "combustao" ? (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
             <Fuel size={12} className="flex-shrink-0" /> Combustão
           </span>
@@ -111,14 +119,14 @@ export const createVeiculoColumns = (
     ),
   },
   {
-    accessorKey: 'consumo',
-    header: 'Consumo Médio',
+    accessorKey: "consumo",
+    header: "Consumo Médio",
     size: 160,
     minSize: 140,
     maxSize: 200,
-    cell: ({ row }: any) => (
+    cell: ({ row }) => (
       <span className="font-mono text-slate-200 whitespace-nowrap">
-        {row.original.tipoPropulsao === 'combustao'
+        {row.original.tipoPropulsao === "combustao"
           ? `${Number(row.original.consumo).toFixed(1)} km/l`
           : `${Number(row.original.consumo).toFixed(1)} kWh/100km`}
       </span>

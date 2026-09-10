@@ -1,58 +1,47 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  useReactTable,
-  getCoreRowModel,
-} from '@tanstack/react-table';
-import {
-  Car,
-  Plus,
-  Search,
-  Fuel,
-  Zap,
-  Trash2,
-  X,
-} from 'lucide-react';
-import { BaseDataTable } from '../../../contexts/BaseDataTable';
-import { createVeiculoColumns, type Veiculo } from './table/tableConfig';
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useReactTable, getCoreRowModel } from "@tanstack/react-table";
+import { Car, Plus, Search, Fuel, Zap, Trash2, X, Leaf } from "lucide-react";
+import { BaseDataTable } from "../../../contexts/BaseDataTable";
+import { createVeiculoColumns, type Veiculo } from "./table/tableConfig";
 
 const VEICULOS_MOCK: Veiculo[] = [
   {
-    id: '1',
-    apelido: 'Carro do Trabalho',
-    marca: 'Chevrolet',
-    modelo: 'Onix 1.0 Turbo',
+    id: "1",
+    apelido: "Carro do Trabalho",
+    marca: "Chevrolet",
+    modelo: "Onix 1.0 Turbo",
     anoFabricacao: 2023,
-    tipoPropulsao: 'combustao',
+    tipoPropulsao: "combustao",
     consumo: 13.5,
   },
   {
-    id: '2',
-    apelido: 'Meu Elétrico',
-    marca: 'BYD',
-    modelo: 'Dolphin Mini',
+    id: "2",
+    apelido: "Meu Elétrico",
+    marca: "BYD",
+    modelo: "Dolphin Mini",
     anoFabricacao: 2024,
-    tipoPropulsao: 'eletrico',
+    tipoPropulsao: "eletrico",
     consumo: 14.5,
     capacidadeBateria: 38.0,
     autonomiaKm: 280,
   },
   {
-    id: '3',
-    apelido: 'Carro de Viagem',
-    marca: 'Toyota',
-    modelo: 'Corolla Cross Hybrid',
+    id: "3",
+    apelido: "Carro de Viagem",
+    marca: "Toyota",
+    modelo: "Corolla Cross Hybrid",
     anoFabricacao: 2022,
-    tipoPropulsao: 'combustao',
+    tipoPropulsao: "combustao",
     consumo: 17.8,
   },
   {
-    id: '4',
-    apelido: 'SUV Elétrica',
-    marca: 'Volvo',
-    modelo: 'EX30',
+    id: "4",
+    apelido: "SUV Elétrica",
+    marca: "Volvo",
+    modelo: "EX30",
     anoFabricacao: 2024,
-    tipoPropulsao: 'eletrico',
+    tipoPropulsao: "eletrico",
     consumo: 16.2,
     capacidadeBateria: 69.0,
     autonomiaKm: 340,
@@ -63,14 +52,18 @@ export default function ConsultarVeiculosScreen() {
   const navigate = useNavigate();
 
   const [veiculos, setVeiculos] = useState<Veiculo[]>(VEICULOS_MOCK);
-  const [busca, setBusca] = useState('');
-  const [filtroPropulsao, setFiltroPropulsao] = useState<'todos' | 'combustao' | 'eletrico'>('todos');
+  const [busca, setBusca] = useState("");
+  const [filtroPropulsao, setFiltroPropulsao] = useState<
+    "todos" | "combustao" | "eletrico" | "hibrido"
+  >("todos");
 
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [sorting, setSorting] = useState([]);
 
   // Estados dos modais
-  const [veiculoSelecionado, setVeiculoSelecionado] = useState<Veiculo | null>(null);
+  const [veiculoSelecionado, setVeiculoSelecionado] = useState<Veiculo | null>(
+    null,
+  );
   const [modalVisualizarAberto, setModalVisualizarAberto] = useState(false);
   const [modalExcluirAberto, setModalExcluirAberto] = useState(false);
 
@@ -83,7 +76,9 @@ export default function ConsultarVeiculosScreen() {
         v.apelido.toLowerCase().includes(busca.toLowerCase());
 
       const matchPropulsao =
-        filtroPropulsao === 'todos' ? true : v.tipoPropulsao === filtroPropulsao;
+        filtroPropulsao === "todos"
+          ? true
+          : v.tipoPropulsao === filtroPropulsao;
 
       return matchBusca && matchPropulsao;
     });
@@ -114,15 +109,16 @@ export default function ConsultarVeiculosScreen() {
 
   // Definição das colunas
   const columns = useMemo(
-    () => createVeiculoColumns(handleVisualizar, handleEditar, handleAbrirExclusao),
-    [veiculos]
+    () =>
+      createVeiculoColumns(handleVisualizar, handleEditar, handleAbrirExclusao),
+    [veiculos],
   );
 
   // Instanciação correta da tabela no TanStack Table v8
   const table = useReactTable({
     data: veiculosFiltrados,
     columns,
-    columnResizeMode: 'onChange',
+    columnResizeMode: "onChange",
     state: {
       pagination,
       sorting,
@@ -141,13 +137,17 @@ export default function ConsultarVeiculosScreen() {
             <Car size={20} />
           </div>
           <div>
-            <h1 className="font-bold text-lg text-slate-100 leading-tight">Garagem de Veículos</h1>
-            <p className="text-xs text-slate-500">Gerencie seus veículos para cálculo de rotas</p>
+            <h1 className="font-bold text-lg text-slate-100 leading-tight">
+              Garagem de Veículos
+            </h1>
+            <p className="text-xs text-slate-500">
+              Gerencie seus veículos para cálculo de rotas
+            </p>
           </div>
         </div>
 
         <button
-          onClick={() => navigate('/veiculos/cadastro')}
+          onClick={() => navigate("/veiculos/cadastro")}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-xs shadow-lg shadow-blue-500/10 transition-colors cursor-pointer"
         >
           <Plus size={16} />
@@ -174,22 +174,22 @@ export default function ConsultarVeiculosScreen() {
           <div className="flex items-center bg-[#131b2e] border border-slate-800 rounded-lg p-1 text-xs">
             <button
               type="button"
-              onClick={() => setFiltroPropulsao('todos')}
+              onClick={() => setFiltroPropulsao("todos")}
               className={`px-3 py-1.5 rounded-md transition-colors ${
-                filtroPropulsao === 'todos'
-                  ? 'bg-blue-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
+                filtroPropulsao === "todos"
+                  ? "bg-blue-600 text-white font-medium"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
               Todos
             </button>
             <button
               type="button"
-              onClick={() => setFiltroPropulsao('combustao')}
+              onClick={() => setFiltroPropulsao("combustao")}
               className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors ${
-                filtroPropulsao === 'combustao'
-                  ? 'bg-blue-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
+                filtroPropulsao === "combustao"
+                  ? "bg-blue-600 text-white font-medium"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <Fuel size={13} />
@@ -197,24 +197,36 @@ export default function ConsultarVeiculosScreen() {
             </button>
             <button
               type="button"
-              onClick={() => setFiltroPropulsao('eletrico')}
+              onClick={() => setFiltroPropulsao("eletrico")}
               className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors ${
-                filtroPropulsao === 'eletrico'
-                  ? 'bg-blue-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
+                filtroPropulsao === "eletrico"
+                  ? "bg-blue-600 text-white font-medium"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <Zap size={13} />
               Elétrico
             </button>
+            <button
+              type="button"
+              onClick={() => setFiltroPropulsao("hibrido")}
+              className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors ${
+                filtroPropulsao === "hibrido"
+                  ? "bg-blue-600 text-white font-medium"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Leaf size={13} />
+              Híbrido
+            </button>
           </div>
 
-          {(busca || filtroPropulsao !== 'todos') && (
+          {(busca || filtroPropulsao !== "todos") && (
             <button
               type="button"
               onClick={() => {
-                setBusca('');
-                setFiltroPropulsao('todos');
+                setBusca("");
+                setFiltroPropulsao("todos");
               }}
               className="text-xs text-slate-400 hover:text-slate-200 underline cursor-pointer"
             >
@@ -256,38 +268,52 @@ export default function ConsultarVeiculosScreen() {
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between py-1 border-b border-slate-800/40">
                 <span className="text-slate-400">Apelido:</span>
-                <span className="font-semibold text-slate-100">{veiculoSelecionado.apelido}</span>
+                <span className="font-semibold text-slate-100">
+                  {veiculoSelecionado.apelido}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/40">
                 <span className="text-slate-400">Marca / Modelo:</span>
-                <span className="font-semibold text-slate-100">{veiculoSelecionado.marca} {veiculoSelecionado.modelo}</span>
+                <span className="font-semibold text-slate-100">
+                  {veiculoSelecionado.marca} {veiculoSelecionado.modelo}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/40">
                 <span className="text-slate-400">Ano de Fabricação:</span>
-                <span className="font-semibold text-slate-100">{veiculoSelecionado.anoFabricacao}</span>
+                <span className="font-semibold text-slate-100">
+                  {veiculoSelecionado.anoFabricacao}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/40">
                 <span className="text-slate-400">Tipo de Propulsão:</span>
-                <span className="capitalize font-semibold text-slate-100">{veiculoSelecionado.tipoPropulsao}</span>
+                <span className="capitalize font-semibold text-slate-100">
+                  {veiculoSelecionado.tipoPropulsao}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/40">
                 <span className="text-slate-400">Consumo Médio:</span>
                 <span className="font-mono font-semibold text-blue-400">
-                  {veiculoSelecionado.tipoPropulsao === 'combustao'
+                  {veiculoSelecionado.tipoPropulsao === "combustao"
                     ? `${veiculoSelecionado.consumo} km/l`
                     : `${veiculoSelecionado.consumo} kWh/100km`}
                 </span>
               </div>
 
-              {veiculoSelecionado.tipoPropulsao === 'eletrico' && (
+              {veiculoSelecionado.tipoPropulsao === "eletrico" && (
                 <>
                   <div className="flex justify-between py-1 border-b border-slate-800/40">
-                    <span className="text-slate-400">Capacidade da Bateria:</span>
-                    <span className="font-semibold text-slate-100">{veiculoSelecionado.capacidadeBateria} kWh</span>
+                    <span className="text-slate-400">
+                      Capacidade da Bateria:
+                    </span>
+                    <span className="font-semibold text-slate-100">
+                      {veiculoSelecionado.capacidadeBateria} kWh
+                    </span>
                   </div>
                   <div className="flex justify-between py-1">
                     <span className="text-slate-400">Autonomia Estimada:</span>
-                    <span className="font-semibold text-emerald-400">{veiculoSelecionado.autonomiaKm} km</span>
+                    <span className="font-semibold text-emerald-400">
+                      {veiculoSelecionado.autonomiaKm} km
+                    </span>
                   </div>
                 </>
               )}
@@ -314,7 +340,9 @@ export default function ConsultarVeiculosScreen() {
               Confirmar Exclusão
             </h3>
             <p className="text-xs text-slate-400">
-              Tem certeza que deseja excluir o veículo <strong>{veiculoSelecionado.apelido}</strong> ({veiculoSelecionado.modelo})? Esta ação não poderá ser desfeita.
+              Tem certeza que deseja excluir o veículo{" "}
+              <strong>{veiculoSelecionado.apelido}</strong> (
+              {veiculoSelecionado.modelo})? Esta ação não poderá ser desfeita.
             </p>
             <div className="flex justify-end gap-2 pt-2">
               <button

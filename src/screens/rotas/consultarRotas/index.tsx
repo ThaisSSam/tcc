@@ -165,7 +165,7 @@ export default function ConsultarRotasScreen() {
         </div>
 
         <button
-          onClick={() => navigate('/rotas/mapa')}
+          onClick={() => navigate('/mapa')}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-xs shadow-lg shadow-blue-500/10 transition-colors cursor-pointer"
         >
           <Map size={16} />

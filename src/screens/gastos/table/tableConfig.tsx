@@ -117,29 +117,29 @@ export const gastosTableColumns: ColumnDef<RegistroGasto>[] = [
       );
     },
   },
-  {
-    accessorKey: "manutencaoNecessaria",
-    header: "Status / Manutenção",
-    size: 190,
-    minSize: 140,
-    maxSize: 280,
-    cell: ({ row }) => (
-      <div className="font-sans truncate">
-        {row.original.manutencaoNecessaria ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 truncate">
-            <AlertTriangle size={11} className="flex-shrink-0" />{" "}
-            {row.original.tipoManutencao || "Revisão Necessária"}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 truncate">
-            <CheckCircle2
-              size={11}
-              className="text-emerald-400 flex-shrink-0"
-            />{" "}
-            Em dia
-          </span>
-        )}
-      </div>
-    ),
-  },
+  // {
+  //   accessorKey: "manutencaoNecessaria",
+  //   header: "Status / Manutenção",
+  //   size: 190,
+  //   minSize: 140,
+  //   maxSize: 280,
+  //   cell: ({ row }) => (
+  //     <div className="font-sans truncate">
+  //       {row.original.manutencaoNecessaria ? (
+  //         <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 truncate">
+  //           <AlertTriangle size={11} className="flex-shrink-0" />{" "}
+  //           {row.original.tipoManutencao || "Revisão Necessária"}
+  //         </span>
+  //       ) : (
+  //         <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 truncate">
+  //           <CheckCircle2
+  //             size={11}
+  //             className="text-emerald-400 flex-shrink-0"
+  //           />{" "}
+  //           Em dia
+  //         </span>
+  //       )}
+  //     </div>
+  //   ),
+  // },
 ];

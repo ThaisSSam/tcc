@@ -10,6 +10,7 @@ const LoginScreen = lazy(() => import("./screens/login/index"));
 const ForgotPasswordScreen = lazy(() => import("./screens/login/esqueciSenha"));
 const DashboardScreen = lazy(() => import("./screens/dashboard"));
 const ConsultarVeiculosScreen = lazy(() => import("./screens/veiculos/consultarVeiculos/index"));
+const CadastrarVeiculoScreen = lazy(() => import("./screens/veiculos/cadastrarVeiculos/index"));
 
 export default function App() {
   const [token, setToken] = useState<string | null>(() => {
@@ -43,7 +44,10 @@ export default function App() {
       <Routes>
         <Route element={<AppLayout onLogout={handleLogout} />}>
           <Route path="/home" element={<DashboardScreen />} />
+          
           <Route path="/veiculos" element={<ConsultarVeiculosScreen />} />
+          <Route path="/veiculos/cadastro" element={<CadastrarVeiculoScreen />} />
+          
           <Route path="/rotas" element={<ConsultarRotasScreen />} />
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/mapa" element={<MapaRotasScreen />} />

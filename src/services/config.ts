@@ -1,8 +1,7 @@
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios';
 
-const baseURL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+const baseURL = (import.meta.env.VITE_API_URL).replace(/\/+$/, '');
 
-// cache para evitar requisições síncronas idênticas duplicadas
 const pendingRequests = new Map<string, Promise<AxiosResponse>>();
 
 const normalizeObject = (obj: any): any => {
@@ -45,11 +44,10 @@ const generateRequestKey = (config: AxiosRequestConfig): string => {
 
 const api = axios.create({
   baseURL,
-  timeout: 30000,
-  withCredentials: true,
+  timeout: 15000,
 });
 
-// injeta o Token
+// Injeta o Token JWT em requisições autenticadas
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
   if (token) {
@@ -86,11 +84,11 @@ api.request = function (config: AxiosRequestConfig): any {
   return requestPromise;
 };
 
-// redirecionamento em caso de perda de sessão
+// Intercepta 401 para redirecionar se o token expirar
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const ehRotaLogin = error.config?.url?.includes('/usuarios/login');
+    const ehRotaLogin = error.config?.url?.includes('/api/login');
 
     if ((error.response?.status === 401 || error.response?.status === 403) && !ehRotaLogin) {
       localStorage.removeItem('auth_token');

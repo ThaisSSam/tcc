@@ -1,29 +1,28 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Car,
   Fuel,
   Zap,
   Leaf,
-  ArrowLeft,
   Save,
   AlertCircle,
 } from 'lucide-react';
 import { type Veiculo } from '../consultarVeiculos/table/tableConfig';
+import { veiculosEndpoints, type VeiculoDTO } from '../../../services/endpoints/veiculos';
 
 interface VeiculoFormProps {
   initialData?: Partial<Veiculo>;
   isEditing?: boolean;
-  onSubmit: (data: Omit<Veiculo, 'id'>) => void;
+  idParaEdicao?: string;
+  onSuccess?: () => void;
 }
 
 export function VeiculoForm({
   initialData,
   isEditing = false,
-  onSubmit,
+  idParaEdicao,
+  onSuccess,
 }: VeiculoFormProps) {
-  const navigate = useNavigate();
-
   const [apelido, setApelido] = useState(initialData?.apelido || '');
   const [marca, setMarca] = useState(initialData?.marca || '');
   const [modelo, setModelo] = useState(initialData?.modelo || '');
@@ -41,6 +40,8 @@ export function VeiculoForm({
     initialData?.autonomiaKm?.toString() || ''
   );
 
+  const [salvando, setSalvando] = useState(false);
+  const [erroGeral, setErroGeral] = useState<string | null>(null);
   const [erros, setErros] = useState<Record<string, string>>({});
 
   const validarFormulario = () => {
@@ -76,26 +77,52 @@ export function VeiculoForm({
     return Object.keys(novosErros).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErroGeral(null);
     if (!validarFormulario()) return;
 
-    const payload: Omit<Veiculo, 'id'> = {
+    // Normalização das colunas conforme o modelo de persistência do MySQL
+    const payloadApi: Partial<VeiculoDTO> = {
       apelido: apelido.trim(),
       marca: marca.trim(),
       modelo: modelo.trim(),
-      anoFabricacao: parseInt(anoFabricacao, 10),
-      tipoPropulsao,
-      consumo: parseFloat(consumo),
-      capacidadeBateria: capacidadeBateria ? parseFloat(capacidadeBateria) : undefined,
-      autonomiaKm: autonomiaKm ? parseFloat(autonomiaKm) : undefined,
+      ano_fabricacao: parseInt(anoFabricacao, 10),
+      tipo_propulsao: tipoPropulsao,
+      consumo_kml: tipoPropulsao === 'combustao' ? parseFloat(consumo) : null,
+      consumo_kwh_100km: tipoPropulsao === 'eletrico' ? parseFloat(consumo) : null,
+      capacidade_bateria_kwh: capacidadeBateria ? parseFloat(capacidadeBateria) : null,
+      autonomia_km: autonomiaKm ? parseFloat(autonomiaKm) : null,
+      fonte_consumo: 'manual',
     };
 
-    onSubmit(payload);
+    try {
+      setSalvando(true);
+      if (isEditing && idParaEdicao) {
+        await veiculosEndpoints.atualizar(idParaEdicao, payloadApi);
+      } else {
+        await veiculosEndpoints.cadastrar(payloadApi);
+      }
+
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (err: any) {
+      setErroGeral(err.message || 'Erro ao persistir veículo no banco.');
+    } finally {
+      setSalvando(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w">
+      {erroGeral && (
+        <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-rose-400 text-xs flex items-center gap-2">
+          <AlertCircle size={16} />
+          <span>{erroGeral}</span>
+        </div>
+      )}
+
       {/* TIPO DE PROPULSÃO */}
       <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
@@ -234,7 +261,7 @@ export function VeiculoForm({
         </div>
       </div>
 
-      {/* EFICIÊNCIA & CONSUMO (CAMPOS CONDICIONAIS) */}
+      {/* EFICIÊNCIA & CONSUMO */}
       <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2 border-b border-slate-800 pb-3">
           {tipoPropulsao === 'eletrico' ? <Zap size={15} className="text-emerald-400" /> : <Fuel size={15} className="text-amber-400" />}
@@ -242,7 +269,6 @@ export function VeiculoForm({
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          {/* CONSUMO */}
           <div>
             <label className="block text-slate-400 mb-1 font-medium">
               {tipoPropulsao === 'eletrico' ? 'Consumo Médio (kWh / 100km)' : 'Consumo Médio (km / litro)'} <span className="text-rose-500">*</span>
@@ -265,7 +291,6 @@ export function VeiculoForm({
             {erros.consumo && <p className="text-rose-400 text-[11px] mt-1 flex items-center gap-1"><AlertCircle size={11} />{erros.consumo}</p>}
           </div>
 
-          {/* AUTONOMIA (ELÉTRICOS E HÍBRIDOS) */}
           {(tipoPropulsao === 'eletrico' || tipoPropulsao === 'hibrido') && (
             <div>
               <label className="block text-slate-400 mb-1 font-medium">
@@ -290,7 +315,6 @@ export function VeiculoForm({
             </div>
           )}
 
-          {/* CAPACIDADE DA BATERIA (ELÉTRICOS E HÍBRIDOS) */}
           {(tipoPropulsao === 'eletrico' || tipoPropulsao === 'hibrido') && (
             <div>
               <label className="block text-slate-400 mb-1 font-medium">
@@ -321,9 +345,10 @@ export function VeiculoForm({
       <div className="flex items-center justify-end gap-3 pt-2">
         <button
           type="submit"
-          className="flex items-center gap-1.5 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
+          disabled={salvando}
+          className="flex items-center gap-1.5 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-lg shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
         >
-          <Save size={14} /> {isEditing ? 'Salvar Alterações' : 'Cadastrar Veículo'}
+          <Save size={14} /> {salvando ? 'Gravando...' : isEditing ? 'Salvar Alterações' : 'Cadastrar Veículo'}
         </button>
       </div>
     </form>

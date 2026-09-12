@@ -8,7 +8,7 @@ export interface SimulacaoRota {
   origem: string;
   destino: string;
   veiculoNome: string;
-  tipoPropulsao: 'combustao' | 'eletrico';
+  tipoPropulsao: 'combustao' | 'eletrico' | 'hibrido';
   distanciaKm: number;
   duracaoEstimada: string;
   custoDeslocamento: number;

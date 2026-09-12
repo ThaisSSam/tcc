@@ -1,89 +1,94 @@
-// @ts-nocheck
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/Button";
-import { Mail, Info, Key } from "lucide-react";
-import { esqueciSenhaService } from "@/services/authService";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Mail, ArrowLeft, KeyRound } from 'lucide-react';
+import loginEndpoints from '../../services/endpoints/login';
 
-export default function EsqueciSenha() {
+export default function EsqueciSenhaScreen() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("");
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [mensagem, setMensagem] = useState('');
 
-  const handleRecuperar = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus("Enviando...");
+    setStatus('loading');
+    setMensagem('');
 
     try {
-      const resposta = await esqueciSenhaService(email);
-      setStatus(resposta.message);
-    } catch (erro: any) {
-      setStatus(`Falhou: ${erro.message}`);
+      const res = await loginEndpoints.solicitarRecuperacao(email);
+      setStatus('success');
+      setMensagem(res.message || 'Instruções enviadas para o seu e-mail.');
+    } catch (err: any) {
+      setStatus('error');
+      setMensagem(err.message || 'Erro ao solicitar recuperação.');
     }
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#090d16] p-4 font-sans">
-      <div className="w-full max-w-md bg-[#0f172a]/60 border border-slate-800/80 rounded-2xl p-8 backdrop-blur-sm shadow-2xl flex flex-col items-center">
+    <main className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4 font-sans text-white">
+      <div className="w-full max-w-md bg-[#131b2e] border border-slate-800 p-8 rounded-2xl shadow-2xl space-y-6">
+        <button
+          type="button"
+          onClick={() => navigate('/login')}
+          className="flex items-center gap-2 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={16} />
+          Voltar para o Login
+        </button>
 
-        <div className="w-12 h-12 bg-[#46a2f2]/10 border border-[#46a2f2]/30 rounded-xl flex items-center justify-center mb-4">
-          <Key className="text-white scale-x-[-1]"/>
-        </div>
-
-        <h2 className="text-2xl font-bold text-white mb-2 text-center">Recuperar senha</h2>
-        <p className="text-sm text-slate-400/80 text-center mb-6 px-4">
-          Informe seu e-mail cadastrado e enviaremos um link para redefinir sua senha.
-        </p>
-
-        <form onSubmit={handleRecuperar} className="w-full flex flex-col gap-4">
-          <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-2">
-              E-mail cadastrado <span className="text-red-500">*</span>
-            </label>
-            <div className="relative flex items-center">
-              <span className="absolute left-3 text-slate-500">
-                <Mail size={16} />
-              </span>
-              <input
-                type="email"
-                className="w-full p-2.5 pl-10 border border-slate-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-[#131c31] text-white text-sm transition-all"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com.br"
-                required
-              />
-            </div>
+        <div className="space-y-2">
+          <div className="w-10 h-10 bg-blue-600/20 text-blue-500 rounded-xl flex items-center justify-center border border-blue-500/30">
+            <KeyRound size={20} />
           </div>
-
-          <Button
-            type="submit"
-            className="w-full bg-[#3b82f6] hover:bg-blue-600 text-white p-2.5 rounded-lg font-semibold text-sm transition-colors mt-2 shadow-lg shadow-blue-500/20"
-          >
-            Enviar link de recuperação
-          </Button>
-
-          <div className="text-center text-xs text-slate-400 mt-2">
-            Lembrou a senha?{" "}
-            <button
-              type="button"
-              onClick={() => navigate("/login")}
-              className="text-blue-500 hover:underline font-medium ml-1 cursor-pointer"
-            >
-              Voltar ao login
-            </button>
-          </div>
-
-          {status && <p className="text-center text-xs text-slate-300 mt-1">{status}</p>}
-        </form>
-
-        <div className="w-full mt-6 p-4 border border-slate-800/60 rounded-xl bg-[#192440]/40 flex items-start gap-3">
-          <span className="text-slate-400 mt-0.5">
-            <Info size={18} />
-          </span>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            O link será enviado para o e-mail cadastrado e expirará em <span className="font-bold text-slate-200">30 minutos</span>.
+          <h1 className="text-xl font-bold text-slate-100">Recuperar Senha</h1>
+          <p className="text-xs text-slate-400">
+            Informe o e-mail cadastrado para receber as instruções de redefinição de acesso.
           </p>
         </div>
+
+        {status === 'success' ? (
+          <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs space-y-3">
+            <p>{mensagem}</p>
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+            >
+              Ir para o Login
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-400 block mb-1.5">
+                E-mail Cadastrado <span className="text-red-500">*</span>
+              </label>
+              <div className="relative flex items-center">
+                <Mail size={16} className="absolute left-3 text-slate-500" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  className="w-full pl-10 pr-3 py-2 bg-slate-800/40 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-all"
+                />
+              </div>
+            </div>
+
+            {status === 'error' && (
+              <p className="text-xs text-rose-500">{mensagem}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={status === 'loading'}
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {status === 'loading' ? 'Enviando...' : 'Enviar Instruções'}
+            </button>
+          </form>
+        )}
       </div>
     </main>
   );

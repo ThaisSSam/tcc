@@ -2,6 +2,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleMap, useJsApiLoader, Marker, type Libraries } from "@react-google-maps/api";
 import { Bell, Settings, Car, Route, UserIcon, ExternalLink, Navigation } from "lucide-react";
+import { veiculosEndpoints } from "./../services/endpoints/veiculos";
+import { rotasEndpoints } from "./../services/endpoints/rotas";
 
 const GOOGLE_MAPS_LIBRARIES: Libraries = ["places"];
 
@@ -40,6 +42,10 @@ export default function DashboardScreen() {
 
   const [posicaoAtual, setPosicaoAtual] = useState<{ lat: number; lng: number }>(localizacaoPadrao);
   const [gpsAtivo, setGpsAtivo] = useState(false);
+  
+  // Estados para os dados reais dos cards
+  const [totalVeiculos, setTotalVeiculos] = useState<number | null>(null);
+  const [totalRotas, setTotalRotas] = useState<number | null>(null);
 
   // Obtém a localização GPS em tempo real do navegador do usuário
   useEffect(() => {
@@ -58,6 +64,27 @@ export default function DashboardScreen() {
         }
       );
     }
+  }, []);
+
+  // Busca os totais reais no backend ao montar a tela
+  useEffect(() => {
+    const carregarTotais = async () => {
+      try {
+        const [reqVeiculos, reqRotas] = await Promise.all([
+          veiculosEndpoints.listar(),
+          rotasEndpoints.listar()
+        ]);
+
+        setTotalVeiculos(reqVeiculos?.data ? reqVeiculos.data.length : 0);
+        setTotalRotas(reqRotas?.data ? reqRotas.data.length : 0);
+      } catch (error) {
+        console.error("Erro ao buscar totais do dashboard", error);
+        setTotalVeiculos(0);
+        setTotalRotas(0);
+      }
+    };
+
+    carregarTotais();
   }, []);
 
   const dadosMeses = useMemo(() => {
@@ -80,7 +107,7 @@ export default function DashboardScreen() {
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 overflow-y-auto font-sans">
       <header className="flex justify-between items-center border-b border-slate-800 bg-[#0f172a] px-6 py-5 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-slate-100">
+        <h1 className="text-xl font-bold text-slate-100 font-['Inter']">
           Calculadora de trajeto
         </h1>
         <div className="flex items-center gap-4 text-xs text-slate-400">
@@ -110,7 +137,9 @@ export default function DashboardScreen() {
               <Car size={16} className="text-blue-600/60" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-slate-100">4</h2>
+              <h2 className="text-3xl font-bold text-slate-100">
+                {totalVeiculos !== null ? totalVeiculos : "-"}
+              </h2>
               <p className="text-[11px] text-slate-500 mt-1">Veículos cadastrados na garagem</p>
             </div>
           </div>
@@ -124,7 +153,9 @@ export default function DashboardScreen() {
               <Route size={16} className="text-slate-500" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-emerald-400">12</h2>
+              <h2 className="text-3xl font-bold text-emerald-400">
+                {totalRotas !== null ? totalRotas : "-"}
+              </h2>
               <p className="text-[11px] text-slate-500 mt-1">Simulações realizadas</p>
             </div>
           </div>
@@ -156,7 +187,7 @@ export default function DashboardScreen() {
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={posicaoAtual}
-                zoom={11}
+                zoom={13}
                 options={{
                   styles: darkMapStyle,
                   disableDefaultUI: true, // Mapa limpo para visualização rápida no dashboard

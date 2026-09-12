@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   useReactTable,
@@ -7,81 +7,19 @@ import {
   type PaginationState,
   type SortingState,
 } from '@tanstack/react-table';
-import { Route as RouteIcon, Plus, Search, Star, X, Trash2, Map } from 'lucide-react';
+import { Route as RouteIcon, Search, Star, X, Trash2, Map, AlertCircle } from 'lucide-react';
 import { BaseDataTable } from '../../../contexts/BaseDataTable';
 import { createRotaColumns, type SimulacaoRota } from './table/tableConfig';
-
-const SIMULACOES_MOCK: SimulacaoRota[] = [
-  {
-    id: '1',
-    apelido: 'Viagem de Férias - Praia',
-    origem: 'Birigui - SP',
-    destino: 'Santos - SP',
-    veiculoNome: 'Onix 1.0 Turbo',
-    tipoPropulsao: 'combustao',
-    distanciaKm: 580.4,
-    duracaoEstimada: '6h 45min',
-    custoDeslocamento: 250.2,
-    custoPedagio: 98.4,
-    custoTotal: 348.6,
-    tipoRota: 'principal',
-    isFavorita: true,
-    dataSimulacao: '15/08/2026',
-  },
-  {
-    id: '2',
-    apelido: 'Trabalho - Reunião Campinas',
-    origem: 'Birigui - SP',
-    destino: 'Campinas - SP',
-    veiculoNome: 'BYD Dolphin Mini',
-    tipoPropulsao: 'eletrico',
-    distanciaKm: 420.0,
-    duracaoEstimada: '4h 50min',
-    custoDeslocamento: 60.9,
-    custoPedagio: 65.0,
-    custoTotal: 125.9,
-    tipoRota: 'principal',
-    isFavorita: false,
-    dataSimulacao: '18/08/2026',
-  },
-  {
-    id: '3',
-    apelido: 'Visita Família (Sem Pedágio)',
-    origem: 'Birigui - SP',
-    destino: 'Bauru - SP',
-    veiculoNome: 'Corolla Cross Hybrid',
-    tipoPropulsao: 'combustao',
-    distanciaKm: 145.0,
-    duracaoEstimada: '1h 55min',
-    custoDeslocamento: 49.0,
-    custoPedagio: 0.0,
-    custoTotal: 49.0,
-    tipoRota: 'sem_pedagio',
-    isFavorita: true,
-    dataSimulacao: '20/08/2026',
-  },
-  {
-    id: '4',
-    apelido: 'Serra da Mantiqueira',
-    origem: 'São Paulo - SP',
-    destino: 'Campos do Jordão - SP',
-    veiculoNome: 'Volvo EX30',
-    tipoPropulsao: 'eletrico',
-    distanciaKm: 180.0,
-    duracaoEstimada: '2h 30min',
-    custoDeslocamento: 29.16,
-    custoPedagio: 24.5,
-    custoTotal: 53.66,
-    tipoRota: 'principal',
-    isFavorita: false,
-    dataSimulacao: '21/08/2026',
-  },
-];
+import { rotasEndpoints } from '../../../services/endpoints/rotas';
+import { favoritosEndpoints } from '../../../services/endpoints/favoritos';
 
 export default function ConsultarRotasScreen() {
   const navigate = useNavigate();
 
-  const [rotas, setRotas] = useState<SimulacaoRota[]>(SIMULACOES_MOCK);
+  const [rotas, setRotas] = useState<SimulacaoRota[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erroApi, setErroApi] = useState<string | null>(null);
+
   const [busca, setBusca] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'principal' | 'sem_pedagio'>('todos');
   const [filtroFavoritos, setFiltroFavoritos] = useState(false);
@@ -93,6 +31,27 @@ export default function ConsultarRotasScreen() {
   const [modalVisualizarAberto, setModalVisualizarAberto] = useState(false);
   const [modalExcluirAberto, setModalExcluirAberto] = useState(false);
 
+  // Busca do histórico do banco
+  const carregarRotas = useCallback(async () => {
+    try {
+      setCarregando(true);
+      setErroApi(null);
+      const res = await rotasEndpoints.listar();
+      if (res?.data) {
+        setRotas(res.data);
+      }
+    } catch (err: any) {
+      setErroApi(err.message || 'Erro ao carregar simulações de rotas.');
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarRotas();
+  }, [carregarRotas]);
+
+  // Filtros locais sobre a lista carregada
   const rotasFiltradas = useMemo(() => {
     return rotas.filter((r) => {
       const matchBusca =
@@ -108,10 +67,34 @@ export default function ConsultarRotasScreen() {
     });
   }, [rotas, busca, filtroTipo, filtroFavoritos]);
 
-  const handleToggleFavorito = (id: string) => {
+  // Alternar Favorito integrado com o banco
+  const handleToggleFavorito = async (id: string) => {
+    const rotaAlvo = rotas.find((r) => r.id === id);
+    if (!rotaAlvo) return;
+
+    const novoStatus = !rotaAlvo.isFavorita;
+
+    // Atualização otimista na interface
     setRotas((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, isFavorita: !r.isFavorita } : r))
+      prev.map((r) => (r.id === id ? { ...r, isFavorita: novoStatus } : r))
     );
+
+    try {
+      if (novoStatus) {
+        await favoritosEndpoints.favoritarRota({
+          simulacao_id: id,
+          apelido_rota: rotaAlvo.apelido || undefined,
+        });
+      } else {
+        await favoritosEndpoints.removerFavorito(id);
+      }
+    } catch (err: any) {
+      // Rollback visual em caso de erro na requisição
+      setRotas((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, isFavorita: !novoStatus } : r))
+      );
+      alert(err.message || 'Não foi possível atualizar o favorito.');
+    }
   };
 
   const handleVisualizar = (rota: SimulacaoRota) => {
@@ -124,11 +107,15 @@ export default function ConsultarRotasScreen() {
     setModalExcluirAberto(true);
   };
 
-  const confirmarExclusao = () => {
-    if (rotaSelecionada) {
+  const confirmarExclusao = async () => {
+    if (!rotaSelecionada) return;
+    try {
+      await rotasEndpoints.excluir(rotaSelecionada.id);
       setRotas((prev) => prev.filter((r) => r.id !== rotaSelecionada.id));
       setModalExcluirAberto(false);
       setRotaSelecionada(null);
+    } catch (err: any) {
+      alert(err.message || 'Erro ao excluir a rota no banco de dados.');
     }
   };
 
@@ -175,6 +162,21 @@ export default function ConsultarRotasScreen() {
 
       {/* CONTEÚDO PRINCIPAL */}
       <main className="flex-1 flex flex-col min-h-0 p-6 bg-[#090d16] space-y-4 overflow-hidden">
+        {erroApi && (
+          <div className="flex items-center justify-between p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-rose-400 text-xs">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={15} />
+              <span>{erroApi}</span>
+            </div>
+            <button
+              onClick={carregarRotas}
+              className="underline font-semibold hover:text-rose-300 cursor-pointer"
+            >
+              Recarregar
+            </button>
+          </div>
+        )}
+
         {/* FILTROS */}
         <div className="flex flex-wrap gap-3 items-center justify-between flex-shrink-0">
           <div className="relative flex-1 min-w-[280px]">
@@ -248,11 +250,11 @@ export default function ConsultarRotasScreen() {
           )}
         </div>
 
-        {/* TABELA UNIFICADA */}
+        {/* TABELA BASE COM DADOS DO BANCO */}
         <div className="rounded-xl border border-slate-800 bg-[#131b2e] flex-1 min-h-0 overflow-hidden">
           <BaseDataTable
             table={table}
-            isLoading={false}
+            isLoading={carregando}
             enablePagination={true}
             enableColumnResizing={true}
             alturaAutomatica={false}
@@ -294,7 +296,7 @@ export default function ConsultarRotasScreen() {
               <div className="flex justify-between py-2 bg-blue-600/10 px-2 rounded-lg border border-blue-500/20">
                 <span className="font-bold text-blue-400">Custo Total Previsto:</span>
                 <span className="font-mono font-bold text-blue-300 text-sm">
-                  R$ {rotaSelecionada.custoTotal.toFixed(2)}
+                  R$ {Number(rotaSelecionada.custoTotal).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -319,7 +321,7 @@ export default function ConsultarRotasScreen() {
               Excluir Simulação
             </h3>
             <p className="text-xs text-slate-400">
-              Deseja remover a rota <strong>{rotaSelecionada.origem} → {rotaSelecionada.destino}</strong>?
+              Deseja remover a rota <strong>{rotaSelecionada.origem} → {rotaSelecionada.destino}</strong> do histórico no banco?
             </p>
             <div className="flex justify-end gap-2 pt-2">
               <button
